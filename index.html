@@ -1,108 +1,263 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="hi">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ChatApp</title>
+<title>Universal Home Paint Visualizer</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-body{height:100vh;background:#ece5dd;display:flex;justify-content:center;align-items:center}
-.box{width:100%;max-width:420px;height:90vh;background:#fff;border-radius:12px;display:none;flex-direction:column}
-.btn{margin:20px;padding:14px;border:none;border-radius:30px;background:#25d366;color:#fff;font-size:16px}
-.top{background:#075e54;color:#fff;padding:14px;font-size:18px}
-.users{flex:1;overflow:auto}
-.user{padding:14px;border-bottom:1px solid #eee;cursor:pointer}
+:root{
+ --accent:#00ffd5;
+ --bg:#0b1025;
+ --card:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box;font-family:system-ui}
+body{
+ margin:0;
+ background:linear-gradient(135deg,#0b1025,#050714);
+ color:#fff;
+}
+header{
+ padding:14px;
+ text-align:center;
+ font-size:20px;
+ font-weight:700;
+}
+.app{padding:10px}
+.panel{
+ background:var(--card);
+ backdrop-filter:blur(14px);
+ border-radius:18px;
+ padding:12px;
+}
+canvas{
+ width:100%;
+ border-radius:14px;
+ background:#000;
+ touch-action:none;
+}
+.controls{
+ display:grid;
+ grid-template-columns:repeat(2,1fr);
+ gap:10px;
+ margin-top:12px;
+}
+button,select,label{
+ padding:12px;
+ border-radius:16px;
+ border:2px solid var(--accent);
+ background:transparent;
+ color:#fff;
+ font-weight:600;
+ cursor:pointer;
+ transition:.2s;
+ text-align:center;
+}
+button:active,label:active{
+ transform:scale(.94);
+ background:var(--accent);
+ color:#000;
+}
+.palette{
+ grid-column:span 2;
+ display:flex;
+ gap:6px;
+ flex-wrap:wrap;
+}
+.colorBox{
+ width:36px;height:36px;
+ border-radius:50%;
+ border:2px solid #fff;
+ cursor:pointer;
+}
+input[type=color]{
+ width:100%;
+ height:44px;
+ border:none;
+ border-radius:12px;
+}
+.footer{
+ text-align:center;
+ opacity:.6;
+ font-size:12px;
+ margin-top:8px;
+}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div class="box" id="loginBox" style="display:flex">
-  <button class="btn" onclick="googleLogin()">Continue with Google</button>
+<header>🏠 Home Paint Visualizer (Pro)</header>
+
+<div class="app">
+ <div class="panel">
+  <canvas id="canvas"></canvas>
+ </div>
+
+ <div class="controls">
+  <label>
+   📸 Upload Photo<br>फोटो अपलोड
+   <input type="file" hidden id="upload" accept="image/*">
+  </label>
+
+  <select id="area">
+   <option>🧱 Diwal</option>
+   <option>🏠 Siling</option>
+   <option>🔲 Border</option>
+   <option>🚪 Gate</option>
+   <option>🪟 Khidki</option>
+  </select>
+
+  <button onclick="mode='auto'">🎯 Auto Fill</button>
+  <button onclick="mode='brush'">✍ Brush</button>
+
+  <div class="palette">
+   <div class="colorBox" style="background:#f5f5f5" onclick="setColor('#f5f5f5')"></div>
+   <div class="colorBox" style="background:#dcd2c0" onclick="setColor('#dcd2c0')"></div>
+   <div class="colorBox" style="background:#6fa8dc" onclick="setColor('#6fa8dc')"></div>
+   <div class="colorBox" style="background:#3c78d8" onclick="setColor('#3c78d8')"></div>
+   <div class="colorBox" style="background:#999999" onclick="setColor('#999999')"></div>
+   <div class="colorBox" style="background:#8b5a2b" onclick="setColor('#8b5a2b')"></div>
+  </div>
+
+  <input type="color" id="color" value="#6fa8dc">
+
+  <button onclick="undo()">↩ Undo</button>
+  <button onclick="redo()">↪ Redo</button>
+
+  <button onclick="reset()">♻ Reset</button>
+  <button onclick="save()">💾 Save</button>
+ </div>
+
+ <div class="footer">Universal • Smooth overlay • Mobile ready</div>
 </div>
 
-<!-- HOME -->
-<div class="box" id="homeBox">
-  <div class="top">Chats</div>
-  <div class="users" id="users"></div>
-</div>
+<script>
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+let baseImage=null;
+let mode="auto";
+let painting=false,lastX=0,lastY=0;
+let history=[],step=-1;
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,setDoc,getDocs,collection
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+function resize(){
+ canvas.width=canvas.parentElement.clientWidth;
+ canvas.height=canvas.width*0.6;
+}
+resize(); addEventListener("resize",resize);
 
-/* FIREBASE CONFIG */
-const firebaseConfig = {
-  apiKey: "AIzaSyA7U96MP2BheQ1ilIUqd2UgycPs8KVC-Gc",
-  authDomain: "chatapp-d38d3.firebaseapp.com",
-  projectId: "chatapp-d38d3",
-  storageBucket: "chatapp-d38d3.firebasestorage.app",
-  messagingSenderId: "321814992234",
-  appId: "1:321814992234:web:d1d8eb9d63fcafc53ec113"
+upload.onchange=e=>{
+ const reader=new FileReader();
+ reader.onload=ev=>{
+  const img=new Image();
+  img.onload=()=>{
+   baseImage=img;
+   resize();
+   ctx.drawImage(img,0,0,canvas.width,canvas.height);
+   saveState();
+  };
+  img.src=ev.target.result;
+ };
+ reader.readAsDataURL(e.target.files[0]);
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+function setColor(c){color.value=c}
 
-const provider = new GoogleAuthProvider();
-let currentUser=null;
-
-/* 🔥 GOOGLE LOGIN (POPUP – FINAL FIX) */
-window.googleLogin = async ()=>{
-  try{
-    const res = await signInWithPopup(auth, provider);
-    const u = res.user;
-
-    await setDoc(doc(db,"users",u.uid),{
-      uid:u.uid,
-      name:u.displayName || "User",
-      email:u.email || ""
-    },{merge:true});
-
-  }catch(e){
-    alert(e.message);
-  }
+canvas.onpointerdown=e=>{
+ if(mode!=="brush")return;
+ painting=true;
+ lastX=e.offsetX; lastY=e.offsetY;
+ saveState();
+}
+canvas.onpointerup=()=>painting=false;
+canvas.onpointermove=e=>{
+ if(!painting)return;
+ ctx.strokeStyle=color.value;
+ ctx.lineWidth=28;
+ ctx.lineCap="round";
+ ctx.globalAlpha=.7;
+ ctx.beginPath();
+ ctx.moveTo(lastX,lastY);
+ ctx.lineTo(e.offsetX,e.offsetY);
+ ctx.stroke();
+ lastX=e.offsetX; lastY=e.offsetY;
 };
 
-/* AUTH STATE */
-onAuthStateChanged(auth, async(user)=>{
-  if(user){
-    currentUser=user;
-    loginBox.style.display="none";
-    homeBox.style.display="flex";
-    loadUsers();
-  }else{
-    loginBox.style.display="flex";
-    homeBox.style.display="none";
-  }
-});
+canvas.onclick=e=>{
+ if(mode!=="auto"||!baseImage)return;
+ saveState();
+ smoothFill(e.offsetX,e.offsetY);
+};
 
-/* LOAD USERS */
-async function loadUsers(){
-  users.innerHTML="";
-  const snap = await getDocs(collection(db,"users"));
-  snap.forEach(d=>{
-    if(d.id!==currentUser.uid){
-      const div=document.createElement("div");
-      div.className="user";
-      div.textContent=d.data().name || d.data().email;
-      users.appendChild(div);
-    }
-  });
+function smoothFill(x,y){
+ const w=canvas.width,h=canvas.height;
+ const img=ctx.getImageData(0,0,w,h);
+ const i=(y*w+x)*4;
+ const tr=img.data[i],tg=img.data[i+1],tb=img.data[i+2];
+ const fill=hex(color.value);
+ const tol=45;
+ const stack=[[x,y]];
+
+ while(stack.length){
+  const [cx,cy]=stack.pop();
+  if(cx<0||cy<0||cx>=w||cy>=h)continue;
+  const idx=(cy*w+cx)*4;
+  const r=img.data[idx],g=img.data[idx+1],b=img.data[idx+2];
+  if(Math.abs(r-tr)<tol && Math.abs(g-tg)<tol && Math.abs(b-tb)<tol){
+   img.data[idx]=fill[0];
+   img.data[idx+1]=fill[1];
+   img.data[idx+2]=fill[2];
+   stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+  }
+ }
+ ctx.putImageData(img,0,0);
+ ctx.globalAlpha=.6;
+}
+
+function hex(h){
+ h=h.replace("#","");
+ return [
+  parseInt(h.slice(0,2),16),
+  parseInt(h.slice(2,4),16),
+  parseInt(h.slice(4,6),16)
+ ];
+}
+
+function saveState(){
+ history=history.slice(0,step+1);
+ history.push(canvas.toDataURL());
+ step++;
+}
+
+function undo(){
+ if(step<=0)return;
+ step--;
+ restore();
+}
+function redo(){
+ if(step>=history.length-1)return;
+ step++;
+ restore();
+}
+function restore(){
+ const img=new Image();
+ img.onload=()=>ctx.drawImage(img,0,0,canvas.width,canvas.height);
+ img.src=history[step];
+}
+
+function reset(){
+ if(!baseImage)return;
+ ctx.drawImage(baseImage,0,0,canvas.width,canvas.height);
+ history=[];step=-1;
+}
+
+function save(){
+ const a=document.createElement("a");
+ a.download="home-paint-design.png";
+ a.href=canvas.toDataURL();
+ a.click();
 }
 </script>
 
 </body>
-</html>
+  </html>
