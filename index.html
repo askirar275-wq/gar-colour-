@@ -2,17 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>AI Home Auto Paint</title>
+<title>AI Home Paint – Fixed</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/deeplab"></script>
 
 <style>
+:root{
+ --accent:#00ffd5;
+ --bg:#0b1025;
+}
+*{box-sizing:border-box;font-family:system-ui}
 body{
  margin:0;
- font-family:system-ui;
- background:#0b1025;
+ background:linear-gradient(135deg,#0b1025,#050714);
  color:#fff;
 }
 header{
@@ -23,61 +27,61 @@ header{
 }
 canvas{
  width:100%;
- max-width:100%;
  border-radius:14px;
  background:#000;
 }
 .controls{
  padding:10px;
  display:grid;
- grid-template-columns:repeat(2,1fr);
+ grid-template-columns:1fr 1fr;
  gap:10px;
 }
-label,button{
+button,label{
  padding:12px;
  border-radius:14px;
- border:2px solid #00ffd5;
+ border:2px solid var(--accent);
  background:transparent;
  color:#fff;
  font-weight:600;
  text-align:center;
+ cursor:pointer;
+ transition:.2s;
 }
 button:active,label:active{
- background:#00ffd5;
+ background:var(--accent);
  color:#000;
+ transform:scale(.95);
 }
-select,input[type=color]{
+input[type=color]{
  width:100%;
  height:40px;
  border-radius:10px;
  border:none;
 }
 .full{grid-column:span 2}
+.status{
+ text-align:center;
+ font-size:13px;
+ opacity:.8;
+ margin-bottom:6px;
+}
 </style>
 </head>
 
 <body>
 
-<header>🤖 AI Auto Home Paint</header>
+<header>🤖 AI Auto Home Paint (Fixed)</header>
+<div class="status" id="status">Loading AI model…</div>
 
 <div class="controls">
  <label onclick="upload.click()">📸 Upload Photo</label>
  <button onclick="detect()">🤖 Detect</button>
 
- <select id="wallC"><option>Wall</option></select>
- <input type="color" id="wallColor" value="#6fa8dc">
-
- <select id="floorC"><option>Floor</option></select>
- <input type="color" id="floorColor" value="#d9c7a0">
-
- <select id="ceilC"><option>Ceiling</option></select>
- <input type="color" id="ceilColor" value="#ffffff">
-
- <select id="doorC"><option>Gate</option></select>
- <input type="color" id="doorColor" value="#333333">
-
- <select id="winC"><option>Window</option></select>
- <input type="color" id="winColor" value="#8b5a2b">
+ <span>Wall</span><input type="color" id="wallColor" value="#6fa8dc">
+ <span>Floor</span><input type="color" id="floorColor" value="#d9c7a0">
+ <span>Ceiling</span><input type="color" id="ceilColor" value="#ffffff">
+ <span>Gate</span><input type="color" id="doorColor" value="#333333">
+ <span>Window</span><input type="color" id="winColor" value="#8b5a2b">
 
  <button class="full" onclick="apply()">🎨 AUTO APPLY</button>
  <button onclick="reset()">♻ Reset</button>
@@ -88,55 +92,82 @@ select,input[type=color]{
 <canvas id="canvas"></canvas>
 
 <script>
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const status = document.getElementById("status");
+
+let model=null;
+let modelReady=false;
+let detected=false;
 let baseImg=null;
 let seg=null;
-let model=null;
 
-async function loadModel(){
- model = await deeplab.load({base:'pascal',quantizationBytes:2});
-}
-loadModel();
+// LOAD AI MODEL
+(async ()=>{
+ model = await deeplab.load({
+  base:'pascal',
+  quantizationBytes:2
+ });
+ modelReady=true;
+ status.innerText="AI Model Ready ✔ Upload photo";
+})();
 
+// UPLOAD PHOTO
 upload.onchange=e=>{
- const r=new FileReader();
- r.onload=ev=>{
+ const reader=new FileReader();
+ reader.onload=ev=>{
   const img=new Image();
   img.onload=()=>{
    baseImg=img;
    canvas.width=img.width;
    canvas.height=img.height;
    ctx.drawImage(img,0,0);
+   detected=false;
+   status.innerText="Photo loaded ✔ Tap Detect";
   };
   img.src=ev.target.result;
  };
- r.readAsDataURL(e.target.files[0]);
+ reader.readAsDataURL(e.target.files[0]);
 };
 
+// DETECT
 async function detect(){
- if(!baseImg || !model)return alert("Upload photo first");
+ if(!baseImg){
+  alert("Pehle photo upload karo");
+  return;
+ }
+ if(!modelReady){
+  alert("AI model load ho raha hai, thoda wait karo");
+  return;
+ }
+ status.innerText="Detecting… please wait";
  seg = await model.segment(canvas);
- alert("AI Detection Complete");
+ detected=true;
+ status.innerText="Detect complete ✔ Choose colours & AUTO APPLY";
 }
 
+// APPLY COLOURS
 function apply(){
- if(!seg)return alert("Detect first");
+ if(!detected){
+  alert("Pehle Detect dabao");
+  return;
+ }
  const img=ctx.getImageData(0,0,canvas.width,canvas.height);
  const d=img.data;
 
  seg.segmentationMap.forEach((v,i)=>{
-  // PASCAL VOC (approx classes)
-  if(v===1) paint(d,i,wallColor.value);     // wall
-  if(v===2) paint(d,i,floorColor.value);    // floor
-  if(v===15) paint(d,i,ceilColor.value);    // ceiling (approx)
-  if(v===14) paint(d,i,doorColor.value);    // door
-  if(v===9) paint(d,i,winColor.value);      // window
+  if(v===1) paint(d,i,wallColor.value);   // wall
+  if(v===2) paint(d,i,floorColor.value);  // floor
+  if(v===15) paint(d,i,ceilColor.value);  // ceiling (approx)
+  if(v===14) paint(d,i,doorColor.value);  // door
+  if(v===9) paint(d,i,winColor.value);    // window
  });
 
  ctx.putImageData(img,0,0);
+ status.innerText="Paint applied ✔";
 }
 
+// PAINT HELPER
 function paint(d,i,col){
  const c=hex(col);
  d[i*4]=c[0];
@@ -144,6 +175,7 @@ function paint(d,i,col){
  d[i*4+2]=c[2];
 }
 
+// HEX TO RGB
 function hex(h){
  h=h.replace("#","");
  return [
@@ -153,9 +185,15 @@ function hex(h){
  ];
 }
 
+// RESET
 function reset(){
- if(baseImg)ctx.drawImage(baseImg,0,0);
+ if(!baseImg)return;
+ ctx.drawImage(baseImg,0,0);
+ detected=false;
+ status.innerText="Reset ✔ Tap Detect again";
 }
+
+// SAVE
 function save(){
  const a=document.createElement("a");
  a.download="ai-home-paint.png";
