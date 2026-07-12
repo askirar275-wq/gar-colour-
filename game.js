@@ -141,7 +141,7 @@ function gameLoop(){
     drawGroundBlades();
 
     drawPlayer();
-
+    drawPlayerBlades();
     if(typeof updateBlades==="function"){
         updateBlades();
     }
