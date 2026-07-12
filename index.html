@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 
 <title>Blade Arena</title>
 
@@ -13,32 +16,41 @@
 
 <body>
 
-<!-- Top Bar -->
+<!-- ================= HUD ================= -->
 
-<div id="topBar">
+<div id="hud">
 
-<div class="box">
-🪙 Coins :
-<span id="coins">0</span>
-</div>
+<div class="card">
 
-<div class="box">
-🗡 Blades :
-<span id="bladeCount">0</span>
-</div>
+🪙 Coins
 
-<div class="box">
-⭐ Level :
-<span id="level">1</span>
-</div>
+<div id="coins">0</div>
 
 </div>
 
-<!-- Canvas -->
+<div class="card">
 
-<canvas id="gameCanvas"></canvas>
+🗡 Blades
 
-<!-- Joystick -->
+<div id="bladeCount">0</div>
+
+</div>
+
+<div class="card">
+
+⭐ Level
+
+<div id="level">1</div>
+
+</div>
+
+</div>
+
+<!-- ================= Canvas ================= -->
+
+<canvas id="game"></canvas>
+
+<!-- ================= Joystick ================= -->
 
 <div id="joystick">
 
@@ -46,19 +58,26 @@
 
 </div>
 
-<!-- Pause -->
+<!-- ================= Pause ================= -->
 
-<button id="pauseBtn">
+<button id="pause">
+
 ⏸
+
 </button>
 
-<!-- Scripts -->
+<!-- ================= Scripts ================= -->
 
 <script src="game.js"></script>
+
 <script src="player.js"></script>
+
 <script src="blade.js"></script>
+
 <script src="enemy.js"></script>
+
 <script src="ui.js"></script>
 
 </body>
+
 </html>
