@@ -142,7 +142,9 @@ function gameLoop(){
 
     drawPlayer();
     drawPlayerBlades();
+    drawEnemies();
     if(typeof updateBlades==="function"){
+        updateEnemies();
         updateBlades();
     }
 
