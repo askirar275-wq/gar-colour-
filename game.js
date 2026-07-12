@@ -90,7 +90,7 @@ function drawTrees() {
 
 }
 
-function drawTeaShop() {
+function drawTeaShop()drawBuildings(); {
 
     ctx.fillStyle = "#b87333";
 
