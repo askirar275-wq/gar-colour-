@@ -2,108 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Emoji Zombie Shooter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zombie Shooter</title>
 
-<style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-body{
-overflow:hidden;
-background:#1f5f2c;
-font-family:Arial;
-touch-action:none;
-}
-
-#game{
-position:relative;
-width:100vw;
-height:100vh;
-overflow:hidden;
-background:linear-gradient(#2e8b57,#145214);
-}
-
-/* HUD */
-
-#hud{
-position:absolute;
-top:10px;
-left:10px;
-right:10px;
-display:flex;
-justify-content:space-between;
-z-index:1000;
-}
-
-.box{
-background:rgba(0,0,0,.45);
-padding:10px 18px;
-border-radius:12px;
-color:#fff;
-font-weight:bold;
-font-size:20px;
-border:2px solid white;
-}
-
-/* Player */
-
-#player{
-position:absolute;
-bottom:90px;
-left:50%;
-transform:translateX(-50%);
-font-size:60px;
-z-index:100;
-}
-
-/* Fire */
-
-#fire{
-position:absolute;
-right:20px;
-bottom:20px;
-width:90px;
-height:90px;
-border-radius:50%;
-border:none;
-font-size:25px;
-background:#ff3d00;
-color:white;
-box-shadow:0 0 15px black;
-}
-
-#fire:active{
-transform:scale(.9);
-}
-
-/* Joystick */
-
-#joy{
-position:absolute;
-left:20px;
-bottom:20px;
-width:120px;
-height:120px;
-border-radius:50%;
-border:3px solid white;
-background:rgba(255,255,255,.2);
-}
-
-#stick{
-position:absolute;
-left:35px;
-top:35px;
-width:50px;
-height:50px;
-border-radius:50%;
-background:white;
-}
-</style>
-
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -126,33 +28,43 @@ background:white;
 
 <div id="game">
 
+<div id="map"></div>
+
 <div id="player">🪖</div>
 
-<div id="joy">
-<div id="stick"></div>
 </div>
 
-<button id="fire">
-🔫
-</button>
+<!-- JavaScript Files -->
 
-</div>
+<script src="game.js"></script>
 
-<script>
+<script src="player.js"></script>
 
-const game=document.getElementById("game");
+<script src="controls.js"></script>
 
-let score=0;
-let health=100;
-let coins=0;
+<script src="map.js"></script>
 
-const player={
-x:window.innerWidth/2,
-y:window.innerHeight-120,
-speed:8
-};
+<script src="zombie.js"></script>
 
-</script>
+<script src="bullet.js"></script>
+
+<script src="effects.js"></script>
+
+<script src="coins.js"></script>
+
+<script src="guns.js"></script>
+
+<script src="boss.js"></script>
+
+<script src="shop.js"></script>
+
+<script src="ui.js"></script>
+
+<!-- बाद में जोड़ेंगे -->
+<!--
+<script src="save.js"></script>
+<script src="sound.js"></script>
+-->
 
 </body>
 </html>
