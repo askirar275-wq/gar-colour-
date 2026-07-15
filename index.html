@@ -1,83 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-
-<title>Blade Arena</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emoji Zombie Shooter</title>
 
 <link rel="stylesheet" href="style.css">
-
 </head>
-
 <body>
 
-<!-- ================= HUD ================= -->
-
 <div id="hud">
+    <div id="score">⭐ Score : 0</div>
+    <div id="health">❤️ Health : 100</div>
+</div>
 
-<div class="card">
+<div id="game">
 
-🪙 Coins
+    <!-- Forest -->
+    <div id="forest"></div>
 
-<div id="coins">0</div>
+    <!-- Trees -->
+    <div class="tree" style="left:50px;top:70px;">🌲</div>
+    <div class="tree" style="left:280px;top:160px;">🌳</div>
+    <div class="tree" style="left:120px;top:320px;">🌲</div>
+
+    <!-- Rocks -->
+    <div class="rock" style="left:210px;top:260px;">🪨</div>
+
+    <!-- Player -->
+    <div id="player">🪖</div>
 
 </div>
 
-<div class="card">
-
-🗡 Blades
-
-<div id="bladeCount">0</div>
-
-</div>
-
-<div class="card">
-
-⭐ Level
-
-<div id="level">1</div>
-
-</div>
-
-</div>
-
-<!-- ================= Canvas ================= -->
-
-<canvas id="game"></canvas>
-
-<!-- ================= Joystick ================= -->
-
-<div id="joystick">
-
-<div id="stick"></div>
-
-</div>
-
-<!-- ================= Pause ================= -->
-
-<button id="pause">
-
-⏸
-
-</button>
-
-<!-- ================= Scripts ================= -->
-
-<script src="game.js"></script>
+<button id="moveLeft">⬅️</button>
+<button id="moveRight">➡️</button>
 
 <script src="player.js"></script>
-
-<script src="blade.js"></script>
-
-<script src="enemy.js"></script>
-
+<script src="bullet.js"></script>
+<script src="zombie.js"></script>
+<script src="controls.js"></script>
 <script src="ui.js"></script>
+<script src="game.js"></script>
 
 </body>
-
 </html>
